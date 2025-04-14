@@ -1,22 +1,130 @@
-### AL ###
-#Template for AL projects for Dynamics 365 Business Central
-#launch.json folder
-.vscode/
-#Cache folder
-.alcache/
-#Symbols folder
-.alpackages/
-#Snapshots folder
-.snapshots/
-#Testing Output folder
-.output/
-#Extension App-file
-*.app
-#Rapid Application Development File
-rad.json
-#Translation Base-file
-*.g.xlf
-#License-file
-*.flf
-#Test results file
-TestResults.xml
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+
+export default function SirenaApp() {
+  const [reports, setReports] = useState([]);
+  const [kategori, setKategori] = useState("");
+  const [deskripsi, setDeskripsi] = useState("");
+  const [foto, setFoto] = useState(null);
+  const [view, setView] = useState("user");
+
+  const handleSubmit = () => {
+    const newReport = {
+      id: reports.length + 1,
+      kategori,
+      deskripsi,
+      foto: foto ? URL.createObjectURL(foto) : null,
+      status: "Terkirim",
+      waktu: new Date().toLocaleString(),
+    };
+    setReports([newReport, ...reports]);
+    setKategori("");
+    setDeskripsi("");
+    setFoto(null);
+  };
+
+  const updateStatus = (id, newStatus) => {
+    const updatedReports = reports.map((report) =>
+      report.id === id ? { ...report, status: newStatus } : report
+    );
+    setReports(updatedReports);
+  };
+
+  return (
+    <div className="p-6 max-w-3xl mx-auto space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">SIRENA - Pelaporan Insiden</h1>
+        <Button variant="outline" onClick={() => setView(view === "user" ? "admin" : "user")}>
+          {view === "user" ? "Masuk sebagai Admin" : "Kembali ke User"}
+        </Button>
+      </div>
+
+      {view === "user" ? (
+        <>
+          <Card>
+            <CardContent className="space-y-4 pt-4">
+              <Select value={kategori} onValueChange={setKategori}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Pilih Kategori Insiden" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Kehilangan">Kehilangan</SelectItem>
+                  <SelectItem value="Pencurian">Pencurian</SelectItem>
+                  <SelectItem value="Kecelakaan">Kecelakaan</SelectItem>
+                  <SelectItem value="Gangguan">Gangguan</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Textarea
+                placeholder="Deskripsi kejadian..."
+                value={deskripsi}
+                onChange={(e) => setDeskripsi(e.target.value)}
+              />
+
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setFoto(e.target.files[0])}
+              />
+
+              <Button
+                className="w-full"
+                onClick={handleSubmit}
+                disabled={!kategori || !deskripsi}
+              >
+                Kirim Laporan
+              </Button>
+            </CardContent>
+          </Card>
+
+          <div>
+            <h2 className="text-xl font-semibold mb-2">Laporan Terkirim</h2>
+            <div className="space-y-3">
+              {reports.map((report) => (
+                <Card key={report.id}>
+                  <CardContent className="pt-4 space-y-2">
+                    <p><strong>Kategori:</strong> {report.kategori}</p>
+                    <p><strong>Deskripsi:</strong> {report.deskripsi}</p>
+                    {report.foto && (
+                      <img src={report.foto} alt="Bukti Foto" className="w-full h-48 object-cover rounded" />
+                    )}
+                    <p><strong>Status:</strong> {report.status}</p>
+                    <p><strong>Waktu:</strong> {report.waktu}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </>
+      ) : (
+        <div>
+          <h2 className="text-xl font-semibold mb-2">Halaman Admin - Semua Laporan</h2>
+          <div className="space-y-3">
+            {reports.map((report) => (
+              <Card key={report.id}>
+                <CardContent className="pt-4 space-y-2">
+                  <p><strong>Kategori:</strong> {report.kategori}</p>
+                  <p><strong>Deskripsi:</strong> {report.deskripsi}</p>
+                  {report.foto && (
+                    <img src={report.foto} alt="Bukti Foto" className="w-full h-48 object-cover rounded" />
+                  )}
+                  <p><strong>Status:</strong> {report.status}</p>
+                  <p><strong>Waktu:</strong> {report.waktu}</p>
+                  <div className="flex space-x-2">
+                    <Button onClick={() => updateStatus(report.id, "Ditinjau")}>Tandai Ditinjau</Button>
+                    <Button onClick={() => updateStatus(report.id, "Ditangani")}>Tandai Ditangani</Button>
+                    <Button onClick={() => updateStatus(report.id, "Selesai")}>Tandai Selesai</Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
